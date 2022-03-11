@@ -37,6 +37,8 @@ public class WebDriverWaitDemo {
 		driver.get("https://demo.opencart.com/index.php?route=account/login");
 		By email=By.id("input-email");
 		
+		String titleName=doGetPageTitle("Account Login", 20);
+		System.out.println(titleName);
 		
 		waitForElementToBePresent(email,20).sendKeys("madhuri@gmail.com");
 		
@@ -65,12 +67,31 @@ public class WebDriverWaitDemo {
 		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 		return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
 	}
-	public static Boolean waitFotTitleContains(String title, long timeout) {
+	public static Boolean waitForTitleContains(String title, long timeout) {
 		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 		return wait.until(ExpectedConditions.titleContains(title));
 	}
-	public static Boolean waitFotURLFractionContains(String urlFraction, long timeout) {
+	public static String doGetPageTitle(String titleVal, long timeout)
+	{
+		if(waitForTitleContains(titleVal,timeout))
+		{
+			return driver.getTitle();
+		}
+		return null;
+	}
+	
+	public static Boolean waitForURLFractionContains(String urlFraction, long timeout) {
 		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 		return wait.until(ExpectedConditions.urlContains(urlFraction));
+	}
+	public static String waitForURLToBe(String urlFraction, long timeout)
+	{
+		WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
+		
+		if(wait.until(ExpectedConditions.urlContains(urlFraction)))
+		{
+			return driver.getCurrentUrl();
+		}
+		return null;
 	}
 }

@@ -1,15 +1,26 @@
 package seleniumAdavacnce;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class ElementUtil 
@@ -312,36 +323,237 @@ public  void selectValuefromDropdownOptions(By locator, String value)
 	}
 
 }
+//**********************************************************************Wait Utils
+
 
 //********************************************************************* Wait methods for element and Non Element
 
+/**
+ *
+ An expectation for checking an element is visible and enabled such that you can click it.
+
+ *
+ * @param locator
+ * @param timeout
+ * @return
+ */
+
+public WebElement clickWhenElementReady(By locator, int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.elementToBeClickable(locator));
+}
+
+/**
+ An expectation for checking that an element is present on the DOM of a page. This does notnecessarily mean that the element is visible
+ 
+ * @param locator
+ * @param timeout
+ * @return
+ */
 public  WebElement waitForElementToBePresent(By locator, long timeout)
 {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.presenceOfElementLocated(locator));
 }
+
+/**
+ 
+ An expectation for checking that there is at least one element present on a web page.
+ * @param locator
+ * @param timeout
+ * @return
+ */
 public  List<WebElement> waitForAllElementToBePresent(By locator, long timeout)
 {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(locator));
 }
+
+
+/**
+ 
+ An expectation for checking that an element is present on the DOM of a page and visible.
+ Visibility means that the element is not only displayed but also has a height and width that isgreater than 0.
+ * @param locator
+ * @param timeout
+ * @return
+ */
 public  WebElement waitForElementToBeVisible(By locator, long timeout)
 {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
 }
+
+/**
+ An expectation for checking that all elements present on the web page that match the locatorare visible. 
+ Visibility means that the elements are not only displayed but also have a heightand width that is greater than 0.
+ 
+ * @param locator
+ * @param timeout
+ * @return
+ */
 public  List<WebElement> waitForAllElementToBeVisible(By locator, long timeout)
 {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
 }
-public  Boolean waitFotTitleContains(String title, long timeout) {
+
+
+/**
+ *An expectation for checking that the title contains a case-sensitive substring
+
+ *
+ * @param title
+ * @param timeout
+ * @return
+ */
+public  Boolean waitForTitleContains(String title, long timeout) {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.titleContains(title));
 }
+
+/**
+ 
+ An expectation for the URL of the current page to contain specific text.
+
+ * @param urlFraction
+ * @param timeout
+ * @return
+ */
 public  Boolean waitFotURLFractionContains(String urlFraction, long timeout) {
 	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
 	return wait.until(ExpectedConditions.urlContains(urlFraction));
 }
 
+
+
+
+public  String doGetPageTitle(String titleVal, long timeout)
+{
+	if(waitForTitleContains(titleVal,timeout))
+	{
+		return driver.getTitle();
+	}
+	return null;
 }
+
+public  String waitForURLToBe(String urlFraction, long timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver, Duration.ofSeconds(timeout));
+	
+	if(wait.until(ExpectedConditions.urlContains(urlFraction)))
+	{
+		return driver.getCurrentUrl();
+	}
+	return null;
+}
+
+
+public  WebElement waitForElmentPresenceWithFluentWait(By locator, int timeout, int pollingTime, String msg)
+{
+	Wait<WebDriver> wait= new FluentWait<WebDriver>(driver)
+			.withTimeout(Duration.ofSeconds(timeout))
+			.pollingEvery(Duration.ofSeconds(pollingTime))
+			.ignoring(NoSuchElementException.class)
+			.ignoring(StaleElementReferenceException.class)
+			.withMessage(locator+" is not found within given timeout");
+			
+	return wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+}
+
+
+//************************************************************** Wait methods for alert 
+
+public  Alert waitForAlert(int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver,Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.alertIsPresent());
+}
+
+public String getAlertText(int timeout)
+{
+	return waitForAlert(timeout).getText();
+}
+public void acceptAlert(int timeout)
+{
+	 waitForAlert(timeout).accept();
+}
+public void dismissAlert(int timeout)
+{
+	waitForAlert(timeout).dismiss();
+}
+
+
+//************************************************************ wait methods for Frame
+
+public  WebDriver waitForFrameByIndex(int frameIndex, int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver,Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameIndex));
+}
+
+public  WebDriver waitForFrameByName(String fname, int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver,Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(fname));
+}
+public  WebDriver waitForFrameByLocator(By locator, int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver,Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(locator));
+}
+
+public  WebDriver waitForFrameByFrameElement(WebElement frameElement, int timeout)
+{
+	WebDriverWait wait=new WebDriverWait(driver,Duration.ofSeconds(timeout));
+	return wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameElement));
+}
+
+
+//**************************************************** ScreenShot********************
+
+public void takeScreenShotOfPage(WebDriver driver)  {
+	
+	//create TakesScreenshot interface reference and cast driver object of type TakesScreenshot i.e. convert driver to Takesscreenshot
+		TakesScreenshot shot=(TakesScreenshot)driver;
+		
+		
+	//caall getScreenshotAs() method . it will take screenshot and stores as image file type in memory
+		File srcShotfile=shot.getScreenshotAs(OutputType.FILE);
+		
+	//Move image file to new destination file
+		Random ranNum=new Random();
+		int num=ranNum.nextInt(50);
+		System.out.println(num);
+		String name="./screenShot"+num+".png";
+		 File destShotfile=new File(name);
+		 
+		//Copy file at destination
+		 
+		 try {
+			FileUtils.copyFile(srcShotfile, destShotfile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+}
+
+public  void takeScreenShotOfElement(WebElement ele)
+{
+
+File srcEleFile=ele.getScreenshotAs(OutputType.FILE);
+try {
+	FileUtils.copyFile(srcEleFile, new File("./Ele.png"));
+} catch (IOException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}
+}
+
+}
+
+
+
+
